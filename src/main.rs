@@ -8,6 +8,19 @@ fn main() {
     println!("encrypted: {:02x?} {:02x?}", pretty(&text), pretty(&tag1));
     let tag2 = crypt(key, iv, &mut text, true);
     println!("decrypted: {:02x?} {:02x?}", pretty(&text), pretty(&tag2));
+
+    let mut file = File::open("example.bmp").unwrap();
+    let mut data = Vec::new();
+    file.read_to_end(&mut data).unwrap();
+    crypt(b"demo key", b"demo IV", &mut data[1000..], false); // skip header
+
+    let mut file2 = File::create("example_out.bmp").unwrap();
+    file2.write_all(&data).unwrap();
+
+    crypt(b"demo key", b"demo IV", &mut data[1000..], true); // skip header
+
+    let mut file3 = File::create("example_recovered.bmp").unwrap();
+    file3.write_all(&data).unwrap();
 }
 
 fn pretty(xs: &[u8]) -> String {
@@ -132,3 +145,5 @@ fn xor(dst: &mut[u8], src1: &[u8], src2: &[u8]) {
 // which is pretty much what we want
 // and most of them depend on specific bits
 // which is better
+
+use std::{fs::File, io::{Read, Write}};
