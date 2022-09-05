@@ -1,8 +1,8 @@
 #![feature(array_chunks)]
 fn main() {
     let key=b"nyeeeeeh";
-    let mut text=b"I'm a secure cipher! I! I am!!!".to_vec();
-    let iv = b"Don't reuse this!";
+    let mut text=b"The quick brown bat jumped over the other quick brown bat.".to_vec();
+    let iv = b"Test IV: don't reuse";
     println!("plaintext: {:02x?}", pretty(&text));
     let tag1 = crypt(key, iv, &mut text, false);
     println!("encrypted: {:02x?} {:02x?}", pretty(&text), pretty(&tag1));
