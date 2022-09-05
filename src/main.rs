@@ -11,11 +11,8 @@ fn main() {
 }
 
 fn pretty(xs: &[u8]) -> String {
-    // probably not the most efficient way to do this
-    // (might be the least efficient way)
     let mut result = "".to_string();
     for i in xs.iter() {
-        // this is the only allocation in the entire program btw
         result.push_str(&format!("{:02x?}", i))
     }
     return result
@@ -27,7 +24,7 @@ const GLORB: usize = 3;
 const MAC_SIZE: usize = 1;  // useful
 const STATE_SIZE: usize = 23;
 
-const MIX_DATA: &[u8; 65561] = include_bytes!("mixdata");  // prime number
+const MIX_DATA: &[u8; 65561] = include_bytes!("mixdata"); 
 
 fn crypt(key: &[u8], iv: &[u8], buf: &mut [u8], decrypt: bool) -> [u8; MAC_SIZE] {
     let mut state = [0; STATE_SIZE];
@@ -39,16 +36,11 @@ fn crypt(key: &[u8], iv: &[u8], buf: &mut [u8], decrypt: bool) -> [u8; MAC_SIZE]
     });
 
     // write iv
-    // (for security)
     foreach(iv, GLARP, |block| { 
         mix(&mut state); 
         xor_inplace_padded(&mut state, block); 
     });
 
-    // generate output
-    // this is the same as the main loop of xoodyak 
-    // well it's not
-    // but only due to bugs
     let mut ob = [0; GLORB];
     state[state.len() - 1] ^= 80;
     for ib in buf.chunks_mut(GLORB) {
@@ -61,8 +53,6 @@ fn crypt(key: &[u8], iv: &[u8], buf: &mut [u8], decrypt: bool) -> [u8; MAC_SIZE]
 
     mix(&mut state);
 
-    // i almost called this an hmac
-    // but that would imply this constitutes a hash function
     let mut mac = [0; MAC_SIZE];
     mac.copy_from_slice(&state[..MAC_SIZE]);
     mac
@@ -70,8 +60,6 @@ fn crypt(key: &[u8], iv: &[u8], buf: &mut [u8], decrypt: bool) -> [u8; MAC_SIZE]
 
 fn mix(buf: &mut [u8; STATE_SIZE]) {
     // a really good permutation function
-    // fun fact: this cipher might be borderline decent if you replaced this with
-    // anything that's not trash
     for round in 0..337 {  // this is a lot
         if round & 13 == 0 {
             for chunk in buf.array_chunks_mut::<2>() {
@@ -80,8 +68,6 @@ fn mix(buf: &mut [u8; STATE_SIZE]) {
             };
         }
 
-        // flip bits randomly
-        // the NSA is watching you do this
         buf[0] ^= buf[5].rotate_left(2);
         buf[1] ^= buf[2].rotate_left(11);
         buf[2] ^= buf[3].rotate_left(13);
@@ -98,7 +84,7 @@ fn mix(buf: &mut [u8; STATE_SIZE]) {
             buf[i] ^= MIX_DATA[(256 * round as usize + i as usize) % 65561];
         }
 
-        // also some magic numbers for the boys
+        // also some magic numbers
         buf[16] = buf[16].wrapping_add(0x0D);
         buf[17] = buf[17].wrapping_add(0xEA);
         buf[18] = buf[18].wrapping_add(0xDB);
@@ -124,7 +110,6 @@ fn xor_inplace_padded(dst: &mut[u8], src: &[u8]) {
 }
 
 fn xor(dst: &mut[u8], src1: &[u8], src2: &[u8]) {
-    // i had assertions here but then i stopped caring
     for i in 0..dst.len() { dst[i] = src1[i] ^ src2[i]; }
 }    
 
